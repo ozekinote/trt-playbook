@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
-<title>TRT 営業 実践知 — MEDDPICC × 顧客の声</title>
+<title>MEDDPICC & FAQ — TRT Sales Playbook</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=JetBrains+Mono:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
@@ -160,10 +160,8 @@
   <div class="wrap head-grid">
     <div>
       <span class="eyebrow">Edenred Ticket Restaurant ／ Sales Playbook</span>
-      <h1>営業 実践知 — 顧客の一言から、読みと打ち手を引く</h1>
-      <p class="thesis">MEDDPICC を棚に、録音文字起こしから拾った「顧客の生の声」を索引化。商談前・商談中に逆引きするための、現場の第三層（実践知）。</p>
+      <h1>MEDDPICC & FAQ</h1>
     </div>
-    <span class="ribbon">実データ版 ／ 約190商談分析</span>
   </div>
 </header>
 
@@ -173,13 +171,8 @@
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="#18181B" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="#18181B" stroke-width="1.6" stroke-linecap="round"/></svg>
       <input id="q" type="search" placeholder="顧客が言った言葉で引く（例：非課税、上に確認、レシート）" autocomplete="off">
     </label>
-    <div class="statusfilter" role="group" aria-label="状態で絞り込み">
-      <button class="chip" id="f-all" aria-pressed="true">すべて</button>
-      <button class="chip" id="f-proven" aria-pressed="false">実証のみ</button>
-      <button class="chip" id="f-hyp" aria-pressed="false">仮説のみ</button>
-    </div>
     <div class="statusfilter" role="group" aria-label="並び替え">
-      <button class="chip" id="sort-shelf" aria-pressed="true">MEDDPICC順</button>
+      <button class="chip" id="sort-original" aria-pressed="true">収録順</button>
       <button class="chip" id="sort-freq" aria-pressed="false">FAQ頻度順</button>
     </div>
   </div>
@@ -219,11 +212,8 @@ let CARDS = [];
 const EMPTY_MSG = "<b>未着手（0件）</b><br>この棚は、文字起こし分析から流し込み予定です。構造はもう用意できています。";
 
 let active = "ALL";        // shelf key or ALL
-let statusF = "all";       // all | proven | hyp
-let sortMode = "shelf";    // shelf | freq
+let sortMode = "original"; // original（cards.json 収録順）| freq
 let query = "";
-
-const SHELF_ORDER = Object.fromEntries(SHELVES.map((s, i) => [s.key, i]));
 
 /** 商談文字起こし上の言及頻度（freq 文字列 → スコア） */
 function freqScore(freq) {
@@ -244,10 +234,8 @@ function sortCards(list) {
       return d !== 0 ? d : (a._idx ?? 0) - (b._idx ?? 0);
     });
   }
-  return [...list].sort((a, b) => {
-    const d = (SHELF_ORDER[a.shelf] ?? 99) - (SHELF_ORDER[b.shelf] ?? 99);
-    return d !== 0 ? d : (a._idx ?? 0) - (b._idx ?? 0);
-  });
+  // 収録順＝Claude 正本の並び（v0.8 反映時の意図順）。棚は左ナビで絞る。
+  return [...list].sort((a, b) => (a._idx ?? 0) - (b._idx ?? 0));
 }
 
 const $ = s => document.querySelector(s);
@@ -272,12 +260,6 @@ function renderSpine(){
     b.onclick = ()=>{ active = (active===s.key? "ALL" : s.key); render(); };
     spineEl.appendChild(b);
   });
-}
-
-function statusPill(st){
-  return st==="proven"
-    ? `<span class="pill proven"><span class="dot proven"></span>実証</span>`
-    : `<span class="pill hyp"><span class="dot hyp"></span>仮説・未検証</span>`;
 }
 
 function cardHTML(c, rank){
@@ -324,7 +306,6 @@ function cardHTML(c, rank){
       ${srcBlock}
     </div>
     <div class="meta">
-      ${statusPill(c.status)}
       ${rankBadge}
       <span class="pill freq">${c.freq}</span>
     </div>
@@ -335,7 +316,6 @@ function render(){
   renderSpine();
   let list = CARDS.filter(c=>{
     if(active!=="ALL" && c.shelf!==active) return false;
-    if(statusF!=="all" && c.status!==statusF) return false;
     if(query){
       const hay = (c.scene+c.quote+c.read+c.doIt+c.dont+c.speaker).toLowerCase();
       if(!hay.includes(query)) return false;
@@ -347,12 +327,12 @@ function render(){
 
   const shelfNm = active==="ALL" ? "全棚" :
     (()=>{const s=SHELVES.find(x=>x.key===active);return `${s.k}・${s.nm}`;})();
-  const sortNm = sortMode === "freq" ? "FAQ頻度順" : "MEDDPICC順";
+  const sortNm = sortMode === "freq" ? "FAQ頻度順" : "収録順";
   countEl.textContent = `${shelfNm} — ${list.length} 件 · ${sortNm}` + (query?` · 「${query}」`:"");
 
   if(list.length===0){
     // empty shelf vs no match
-    const shelfHasNone = active!=="ALL" && CARDS.filter(c=>c.shelf===active).length===0 && !query && statusF==="all";
+    const shelfHasNone = active!=="ALL" && CARDS.filter(c=>c.shelf===active).length===0 && !query;
     cardsEl.innerHTML = `<div class="empty-note">${shelfHasNone?EMPTY_MSG:"該当なし。検索語や絞り込みを変えてください。"}</div>`;
     return;
   }
@@ -361,21 +341,12 @@ function render(){
 
 function setSort(mode) {
   sortMode = mode;
-  $("#sort-shelf").setAttribute("aria-pressed", mode === "shelf");
+  $("#sort-original").setAttribute("aria-pressed", mode === "original");
   $("#sort-freq").setAttribute("aria-pressed", mode === "freq");
   render();
 }
 
-// status chips
-function setStatus(v){
-  statusF = v;
-  ["all","proven","hyp"].forEach(x=>$("#f-"+x).setAttribute("aria-pressed", x===v));
-  render();
-}
-$("#f-all").onclick   = ()=>setStatus("all");
-$("#f-proven").onclick= ()=>setStatus("proven");
-$("#f-hyp").onclick   = ()=>setStatus("hyp");
-$("#sort-shelf").onclick = ()=>setSort("shelf");
+$("#sort-original").onclick = ()=>setSort("original");
 $("#sort-freq").onclick  = ()=>setSort("freq");
 
 $("#q").addEventListener("input", e=>{ query = e.target.value.trim().toLowerCase(); render(); });
@@ -386,7 +357,10 @@ async function init(){
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     const raw = data.cards ?? data;
-    CARDS = raw.map((c, i) => ({ ...c, _idx: i }));
+    const excluded = new Set(data.meta?.excluded ?? []);
+    CARDS = raw
+      .map((c, i) => ({ ...c, _idx: i }))
+      .filter((c) => !c.hidden && !excluded.has(c.scene));
     render();
   } catch (err) {
     cardsEl.innerHTML = '<div class="empty-note"><b>cards.json の読み込みに失敗しました</b><br>' + err.message + '</div>';
