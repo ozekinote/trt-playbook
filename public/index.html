@@ -152,6 +152,28 @@
   a.src.link:hover{border-color:var(--ink);background:var(--paper-2)}
   a.src.link:focus-visible{outline:2px solid var(--red);outline-offset:2px}
   .src.internal{color:var(--ink-2);background:var(--paper-2);border-style:dashed}
+
+  /* deck FAQ block */
+  .field.faq{background:#F8F7F3;margin:0 -20px;padding:14px 20px 16px;border-bottom:1px solid var(--hair)}
+  .field.faq .flabel{color:var(--ink)}
+  .faq-block+.faq-block{margin-top:14px;padding-top:14px;border-top:1px dashed var(--hair)}
+  .faq-id{font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700;color:var(--red);
+    letter-spacing:.06em;margin-bottom:4px}
+  .faq-cat{font-size:11px;color:var(--ink-2);margin-bottom:8px}
+  .faq-q{font-size:14px;font-weight:700;margin:0 0 10px;line-height:1.45}
+  .faq-conclusion{background:#fff;border-left:3px solid var(--ink);padding:8px 12px;margin:0 0 10px;
+    font-size:13.5px;line-height:1.6}
+  .faq-conclusion strong{font-family:"Archivo",sans-serif;font-size:10px;letter-spacing:.12em;
+    text-transform:uppercase;display:block;margin-bottom:4px;color:var(--ink-2)}
+  .faq-section{margin:0 0 10px}
+  .faq-section h4{font-family:"Archivo",sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-2);margin:0 0 4px}
+  .faq-section p{margin:0;font-size:13px;line-height:1.65;color:var(--ink);white-space:pre-line}
+  .faq-misconception{font-size:12.5px;color:var(--maroon);background:#FEF4F2;border:1px solid #f6ddd7;
+    padding:8px 11px;border-radius:3px;margin:0 0 8px;line-height:1.55}
+  .faq-footnote{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--ink-2);
+    line-height:1.5;margin:0}
+  .pill.faq-ref{color:var(--red);border-color:#f5c4bf;background:#fff8f7}
 </style>
 </head>
 <body>
@@ -191,8 +213,8 @@
 </div>
 
 <footer class="wrap" style="max-width:1180px">
-  <span>第三層＝兆候 × 読み × 打ち手（特に「やらない」）。第一層・第二層は索引化しない。</span>
-  <span>v0.8 ／ 実データ版（FAQ整合・根拠リンク・FAQ頻度順ソート）</span>
+  <span>第三層＝兆候 × 読み × 打ち手（特に「やらない」）。提案デッキ FAQ Q01–Q15 統合（v0.9）。</span>
+  <span>v0.9 ／ マージ版PPTX FAQ</span>
 </footer>
 
 <script>
@@ -262,6 +284,35 @@ function renderSpine(){
   });
 }
 
+function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function faqOneHTML(f){
+  if(!f) return '';
+  const sections = (f.sections||[]).map(s=>`
+    <div class="faq-section">
+      <h4>${esc(s.title)}</h4>
+      <p>${esc(s.body)}</p>
+    </div>`).join('');
+  return `<div class="faq-block">
+    <div class="faq-id">${esc(f.id)} · ${esc(f.category)}</div>
+    <p class="faq-q">Q：${esc(f.question)}</p>
+    <div class="faq-conclusion"><strong>結論</strong>${esc(f.conclusion)}</div>
+    ${sections}
+    ${f.misconception?`<p class="faq-misconception">よくある誤解：${esc(f.misconception)}</p>`:''}
+    ${f.footnote?`<p class="faq-footnote">${esc(f.footnote)}</p>`:''}
+  </div>`;
+}
+
+function faqHTML(c){
+  if(!c.faq) return '';
+  const blocks = Array.isArray(c.faq) ? c.faq.map(faqOneHTML).join('') : faqOneHTML(c.faq);
+  const ids = c.faqIds?.length ? c.faqIds.join('・') : (Array.isArray(c.faq)?c.faq.map(f=>f.id).join('・'):c.faq.id);
+  return `<div class="field faq">
+    <div class="flabel">提案デッキ FAQ（${esc(ids)}）</div>
+    ${blocks}
+  </div>`;
+}
+
 function cardHTML(c, rank){
   const letter = c.shelf==="DC"||c.shelf==="DP" ? "D" :
                  c.shelf==="CH"||c.shelf==="CO" ? "C" :
@@ -303,9 +354,11 @@ function cardHTML(c, rank){
         <div class="flabel">やらない</div>
         <p>${c.dont}</p>
       </div>
+      ${faqHTML(c)}
       ${srcBlock}
     </div>
     <div class="meta">
+      ${c.faqIds?.length?`<span class="pill faq-ref">${c.faqIds.join(' ')}</span>`:''}
       ${rankBadge}
       <span class="pill freq">${c.freq}</span>
     </div>
@@ -317,7 +370,11 @@ function render(){
   let list = CARDS.filter(c=>{
     if(active!=="ALL" && c.shelf!==active) return false;
     if(query){
-      const hay = (c.scene+c.quote+c.read+c.doIt+c.dont+c.speaker).toLowerCase();
+      const faqList = c.faq ? (Array.isArray(c.faq) ? c.faq : [c.faq]) : [];
+      const faqHay = faqList.map(f=>
+        [f.question,f.conclusion,f.misconception,f.footnote,...(f.sections||[]).flatMap(s=>[s.title,s.body])].join(' ')
+      ).join(' ');
+      const hay = (c.scene+c.quote+c.read+c.doIt+c.dont+c.speaker+faqHay).toLowerCase();
       if(!hay.includes(query)) return false;
     }
     return true;
