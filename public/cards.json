@@ -3,9 +3,9 @@
     "version": "1.0.0",
     "updated": "2026-06-29",
     "source": "商談文字起こし分析 — MEDDPICC カード",
-    "note": "FAQ分離 — faqIds参照のみ（29枚）。FAQ正本は faq.json",
+    "note": "FAQ分離 — faqIds参照（35枚）。faq.json v1.1.0",
     "cards": 44,
-    "withFaqIds": 29,
+    "withFaqIds": 35,
     "faq": "public/faq.json"
   },
   "cards": [
@@ -422,7 +422,10 @@
       "doIt": "チャージ時・天引き時の仕訳サンプルを即提示する。",
       "dont": "「経理さんにお任せください」で流す。",
       "freq": "中",
-      "status": "hyp"
+      "status": "hyp",
+      "faqIds": [
+        "Q18"
+      ]
     },
     {
       "shelf": "CO",
@@ -443,7 +446,8 @@
       ],
       "faqIds": [
         "Q08",
-        "Q14"
+        "Q14",
+        "Q21"
       ]
     },
     {
@@ -456,7 +460,10 @@
       "doIt": "「選択の自由度＋併用で非課税枠を最大活用」。併用時の枠計算シートで示す。",
       "dont": "既存弁当の置き換えを迫る。",
       "freq": "低",
-      "status": "proven"
+      "status": "proven",
+      "faqIds": [
+        "Q21"
+      ]
     },
     {
       "shelf": "DC",
@@ -513,7 +520,10 @@
       "doIt": "退職フロー図の標準資料で即答（回収・残高処理を明示）。",
       "dont": "「都度対応で」と曖昧にする。",
       "freq": "中",
-      "status": "proven"
+      "status": "proven",
+      "faqIds": [
+        "Q16"
+      ]
     },
     {
       "shelf": "M",
@@ -654,7 +664,10 @@
       "doIt": "主要チェーン対応表で併用可否を即答する。",
       "dont": "「店舗によります」だけで終える。",
       "freq": "中",
-      "status": "proven"
+      "status": "proven",
+      "faqIds": [
+        "Q17"
+      ]
     },
     {
       "shelf": "PP",
@@ -666,7 +679,10 @@
       "doIt": "MC切替FAQ資料で、利用可能店舗の大幅拡大と移行スケジュールを示す。",
       "dont": "「未定です」で止める。",
       "freq": "中",
-      "status": "proven"
+      "status": "proven",
+      "faqIds": [
+        "Q22"
+      ]
     },
     {
       "shelf": "PP",
@@ -678,7 +694,10 @@
       "doIt": "利用ガイドラインで「本人の食事補助」という原則と線引きを明確に示す。",
       "dont": "曖昧にして“何にでも使える”印象を残す。",
       "freq": "低",
-      "status": "proven"
+      "status": "proven",
+      "faqIds": [
+        "Q20"
+      ]
     },
     {
       "shelf": "I",

@@ -35,7 +35,7 @@ Vercel 側は本 README の headers 設定のまま。Access 通過後に静的 
 
 | 種別 | 正本 | ファイル | 手順 |
 |------|------|----------|------|
-| **FAQ**（数値・根拠・手続き） | PPTX（0629デッキ） | `public/faq.json` | PPT更新 → `merge-deck-faq.mjs` または `patch-faq-*.mjs` → deploy |
+| **FAQ**（数値・根拠・手続き） | PPTX + 商談分析 | `public/faq.json` | デッキ更新 → `import-faq-from-deck-0629.mjs`／商談ギャップ → `patch-faq-sales-report-v2.mjs` |
 | **MEDDPICC**（商談カード） | 文字起こし分析 | `public/cards.json` | Claude 既存フォーマット → `faqIds` のみ参照 → deploy |
 
 ### UI
