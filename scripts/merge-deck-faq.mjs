@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 /**
- * Merge FAQ from Edenred_TRT_大企業向け_マージ版.pptx (slides 38-55)
- * into public/cards.json → v0.9
+ * Non-destructive FAQ merge from Edenred_TRT_大企業向け_マージ版.pptx (Q01–Q15)
+ * into public/cards.json.
+ *
+ * Policy (2026-06-27): additive only — attach faqIds + faq blocks from deck FAQ.
+ * NEVER overwrite read / doIt / dont / status / sources (or other card body fields).
+ * Run validation before write; exit 1 if any core field would change.
  */
 import fs from 'fs';
 import path from 'path';
@@ -38,7 +42,7 @@ const FAQ = {
       {
         title: '改正経緯・留意',
         body:
-          '非課税の月額上限：3,500円 → 7,500円（令和8年度方針）\n施行内容・適用時期は最新情報を要確認\n残業時の食事など他の現物給与は別の取扱い',
+          '非課税の月額上限：3,500円 → 7,500円（2026年4月1日施行／令和8年度）\n施行内容・適用時期は最新情報を要確認\n残業時の食事など他の現物給与は別の取扱い',
       },
     ],
     misconception: '「上限額まで会社が出せば非課税」は誤り。本人負担50%以上も同時に必要です。',
@@ -151,6 +155,11 @@ const FAQ = {
         body:
           '労基法第24条（賃金全額払い原則）の例外として労使協定が必要\n協定書のひな型を提供し、締結プロセスを支援\n入退社・休職時のチャージ調整ルールを事前に整理\n最終確認は顧問社労士へ',
       },
+      {
+        title: 'お金と時系列の流れ（初回利用の例）',
+        body:
+          '6/20 チャージ指示（利用企業→ERJ）15,000円分\n6月末 請求書発行（ERJ→利用企業）16,500円\n7/14 利用料の振込（利用企業→ERJ）16,500円\n7/25 カードへチャージ（ERJ→カード）15,000円／同日に本人負担7,500円を給与天引きで充当\n※請求書は6月末発行・入金は翌月7/14、チャージと天引きは同日（7/25）。初回はチャージ指示〜実チャージまで約1か月。',
+      },
     ],
     misconception: null,
     footnote: '根拠：労基法 第24条。本人負担50%以上は通達36-38の2の要件。協定ひな型はERJが提供。',
@@ -204,7 +213,8 @@ const FAQ = {
     id: 'Q09',
     category: '運用',
     question: '1日の上限や有効期限はありますか？使えるものは？',
-    conclusion: '1日の利用上限・残高の有効期限があり、対象は飲食物に限られます。',
+    conclusion:
+      '1日の利用上限・残高の有効期限があり、対象は業務時間中に摂る飲食物に限られます。',
     sections: [
       {
         title: '具体的なルール',
@@ -378,38 +388,47 @@ const SCENE_FAQ_MAP = {
   '「また連絡します」で終わりそう': ['Q13'],
 };
 
-const DOIT_PATCHES = {
-  '手数料10%が高いと言う': {
-    doIt:
-      '1人あたり手数料1,500円（15,000円×10%）。非課税ウェッジ（所得税10%＋住民税10% ≒ +1,500円/人）と税効果はおおむね相殺 → ネット±0円/人・月（社保は前提に含めない）。オールイン（システム・25万店決済網・カード・サポート・不正監視）。大企業向けボリュームDCあり。比較は月額単価でなく総コスト（Q07）。',
-  },
-  '天引きで手取りが減って見える': {
-    doIt:
-      '給与天引き（賃金控除）で本人負担50%以上を精算。労基法第24条の例外として労使協定が必要（ひな型提供・締結支援）。天引き前後の手取り比較を図解し「実質手取りが増える」を示す。必要なら説明会を代行。',
-  },
-  '残高繰越・有効期限を確認': {
-    doIt: '1日上限2,500円／残高有効期限1年／対象は飲食物のみ（アルコール・タバコ等は対象外）。FAQ図解で即答。国税庁在宅勤務FAQ問12に沿う設計と説明。',
-  },
-  '1日の利用限度額を確認': {
-    doIt: '1日の利用上限2,500円。チャージ残高の有効期限1年。対象は飲食物に限定。限度額設定ガイドで標準値・変更可否を即答。',
-  },
-  '不正利用（タバコ・酒・日用品）を懸念': {
-    doIt:
-      '管理ポータルで利用可視化・カード即時停止。規程で食事以外禁止＋量・頻度モニタリング。OCRで対象外利用検知時は課税対象額をCSV提供（いーウェル連携）。完全防止は困難と正直に説明し、統制・証跡で抑止。',
-  },
-  'パート・アルバイトの対象範囲': {
-    doIt:
-      '2要件に「全員対象」の明文はないが公平な設計を強推。雇用形態ごとの取扱いを規程に明文化。特定部署・役職のみ優遇は給与認定リスク。合理的区分の根拠チャートで社内説明可能に。',
-  },
-  '情シスが個人情報・権限を問う': {
-    doIt:
-      '日常運用はポータルでカード注文・チャージが中心。特別なシステム連携・情シス対応は基本不要。情シス向けにデータ範囲・権限・ログ・委託先管理の説明資料を用意。',
-  },
-  'スマホ決済の時期を気にする': {
-    doIt:
-      '当面はプリペイドカード（iDタッチ）。アプリで残高・履歴・加盟店検索・利用停止・証憑スキャン。モバイル決済は今後対応予定—導入時に最新ロードマップを提示。',
-  },
-};
+/** Fields that must never change during FAQ merge */
+const PRESERVE_FIELDS = [
+  'shelf',
+  'scene',
+  'quote',
+  'speaker',
+  'speakerRead',
+  'read',
+  'doIt',
+  'dont',
+  'freq',
+  'status',
+  'sources',
+];
+
+function stableJson(value) {
+  return JSON.stringify(value ?? null);
+}
+
+function validatePreservation(beforeCards, afterCards) {
+  const beforeByScene = new Map(beforeCards.map((c) => [c.scene, c]));
+  const errors = [];
+
+  for (const after of afterCards) {
+    const before = beforeByScene.get(after.scene);
+    if (!before) continue;
+    for (const field of PRESERVE_FIELDS) {
+      if (stableJson(before[field]) !== stableJson(after[field])) {
+        errors.push(
+          `scene "${after.scene}": ${field} changed\n  before: ${stableJson(before[field])}\n  after:  ${stableJson(after[field])}`
+        );
+      }
+    }
+  }
+
+  if (errors.length) {
+    console.error('Non-destructive merge validation FAILED:\n');
+    errors.forEach((e) => console.error(`- ${e}\n`));
+    process.exit(1);
+  }
+}
 
 const NEW_CARDS = [
   {
@@ -460,39 +479,66 @@ const NEW_CARDS = [
   },
 ];
 
-function attachFaq(card) {
+function attachFaqIds(card) {
   const ids = card.faqIds ?? SCENE_FAQ_MAP[card.scene] ?? [];
   if (!ids.length) return card;
-  const faqs = ids.map((id) => FAQ[id]).filter(Boolean);
-  const patch = DOIT_PATCHES[card.scene];
-  return {
-    ...card,
-    faqIds: ids,
-    faq: faqs.length === 1 ? faqs[0] : faqs,
-    ...(patch || {}),
+  return { ...card, faqIds: ids };
+}
+
+function writeFaqJson() {
+  const items = Object.keys(FAQ)
+    .sort((a, b) => Number(a.slice(1)) - Number(b.slice(1)))
+    .map((id) => FAQ[id]);
+  const faqPath = path.join(ROOT, 'public/faq.json');
+  let prevMeta = {};
+  if (fs.existsSync(faqPath)) {
+    try {
+      prevMeta = JSON.parse(fs.readFileSync(faqPath, 'utf8')).meta ?? {};
+    } catch {
+      /* ignore */
+    }
+  }
+  const faqOut = {
+    meta: {
+      version: prevMeta.version ?? '0.9.2',
+      updated: prevMeta.updated ?? new Date().toISOString().slice(0, 10),
+      source: '提案デッキ FAQ Q01–Q15',
+      note: prevMeta.note ?? 'merge-deck-faq.mjs 正本',
+      count: items.length,
+      deck: prevMeta.deck ?? 'Edenred_TRT_大企業向け_0629.pptx',
+    },
+    items,
   };
+  fs.writeFileSync(faqPath, JSON.stringify(faqOut, null, 2) + '\n');
+  return items.length;
 }
 
 const raw = JSON.parse(fs.readFileSync(CARDS_PATH, 'utf8'));
-const cards = raw.cards.map(attachFaq);
+const beforeCards = raw.cards.map((c) => ({ ...c, faq: undefined }));
+const cards = raw.cards.map((c) => {
+  const { faq: _faq, ...rest } = c;
+  return attachFaqIds(rest);
+});
+validatePreservation(beforeCards, cards);
 const existingScenes = new Set(cards.map((c) => c.scene));
 for (const nc of NEW_CARDS) {
-  if (!existingScenes.has(nc.scene)) cards.push(attachFaq(nc));
+  if (!existingScenes.has(nc.scene)) cards.push(attachFaqIds(nc));
 }
 
-const withFaq = cards.filter((c) => c.faq || c.faqIds?.length).length;
+writeFaqJson();
+const withFaqIds = cards.filter((c) => c.faqIds?.length).length;
 const out = {
   meta: {
-    version: '0.9.0',
-    updated: '2026-06-27',
-    source: 'マージ版PPTX FAQ Q01–Q15 統合',
-    note: `${cards.length}枚・FAQ統合${withFaq}枚・提案デッキ（マージ版）準拠`,
+    version: raw.meta?.version?.startsWith('1.') ? raw.meta.version : '1.0.0',
+    updated: new Date().toISOString().slice(0, 10),
+    source: '商談文字起こし分析 — MEDDPICC カード',
+    note: `FAQ分離 — faqIds参照のみ（${withFaqIds}枚）。FAQ正本は faq.json`,
     cards: cards.length,
-    withFaq,
-    deck: 'Edenred_TRT_大企業向け_マージ版.pptx',
+    withFaqIds,
+    faq: 'public/faq.json',
   },
   cards,
 };
 
 fs.writeFileSync(CARDS_PATH, JSON.stringify(out, null, 2) + '\n');
-console.log(`Wrote ${cards.length} cards, ${withFaq} with FAQ`);
+console.log(`Wrote ${cards.length} cards (${withFaqIds} with faqIds), faq.json (${Object.keys(FAQ).length} items)`);

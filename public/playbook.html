@@ -4,10 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
-<title>MEDDPICC & FAQ — TRT Sales Playbook</title>
+<title>MEDDPICC — TRT Sales Playbook</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=JetBrains+Mono:wght@500;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
 <style>
   :root{
     --paper:#FAFAF7;
@@ -153,27 +154,11 @@
   a.src.link:focus-visible{outline:2px solid var(--red);outline-offset:2px}
   .src.internal{color:var(--ink-2);background:var(--paper-2);border-style:dashed}
 
-  /* deck FAQ block */
-  .field.faq{background:#F8F7F3;margin:0 -20px;padding:14px 20px 16px;border-bottom:1px solid var(--hair)}
-  .field.faq .flabel{color:var(--ink)}
-  .faq-block+.faq-block{margin-top:14px;padding-top:14px;border-top:1px dashed var(--hair)}
-  .faq-id{font-family:"JetBrains Mono",monospace;font-size:10px;font-weight:700;color:var(--red);
-    letter-spacing:.06em;margin-bottom:4px}
-  .faq-cat{font-size:11px;color:var(--ink-2);margin-bottom:8px}
-  .faq-q{font-size:14px;font-weight:700;margin:0 0 10px;line-height:1.45}
-  .faq-conclusion{background:#fff;border-left:3px solid var(--ink);padding:8px 12px;margin:0 0 10px;
-    font-size:13.5px;line-height:1.6}
-  .faq-conclusion strong{font-family:"Archivo",sans-serif;font-size:10px;letter-spacing:.12em;
-    text-transform:uppercase;display:block;margin-bottom:4px;color:var(--ink-2)}
-  .faq-section{margin:0 0 10px}
-  .faq-section h4{font-family:"Archivo",sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;
-    text-transform:uppercase;color:var(--ink-2);margin:0 0 4px}
-  .faq-section p{margin:0;font-size:13px;line-height:1.65;color:var(--ink);white-space:pre-line}
-  .faq-misconception{font-size:12.5px;color:var(--maroon);background:#FEF4F2;border:1px solid #f6ddd7;
-    padding:8px 11px;border-radius:3px;margin:0 0 8px;line-height:1.55}
-  .faq-footnote{font-family:"JetBrains Mono",monospace;font-size:10px;color:var(--ink-2);
-    line-height:1.5;margin:0}
-  .pill.faq-ref{color:var(--red);border-color:#f5c4bf;background:#fff8f7}
+  /* FAQ cross-reference (links to faq.html) */
+  .field.faq-xref{background:#F8F7F3;margin:0 -20px;padding:12px 20px 14px;border-bottom:1px solid var(--hair)}
+  .faq-link-row{display:flex;flex-wrap:wrap;gap:7px}
+  a.pill.faq-ref{text-decoration:none;color:var(--red);border-color:#f5c4bf;background:#fff8f7}
+  a.pill.faq-ref:hover{border-color:var(--red);background:#fff}
 
   /* MEDDPICC usage guide */
   .shelf-usage{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--hair)}
@@ -213,11 +198,18 @@
 <body>
 
 <header>
-  <div class="wrap head-grid">
-    <div>
-      <span class="eyebrow">Edenred Ticket Restaurant ／ Sales Playbook</span>
-      <h1>MEDDPICC & FAQ</h1>
+  <div class="wrap">
+    <div class="head-grid">
+      <div>
+        <span class="eyebrow">Edenred Ticket Restaurant ／ Sales Playbook</span>
+        <h1>MEDDPICC</h1>
+        <p class="thesis">商談録音由来の顧客の声。兆候 × 読み × 打ち手。FAQ（数値・根拠）は別ページ。</p>
+      </div>
     </div>
+    <nav class="site-nav" aria-label="サイト内">
+      <a href="./" aria-current="page">MEDDPICC</a>
+      <a href="./faq.html">FAQ</a>
+    </nav>
   </div>
 </header>
 
@@ -229,7 +221,7 @@
     </label>
     <div class="statusfilter" role="group" aria-label="並び替え">
       <button class="chip" id="sort-original" aria-pressed="true">収録順</button>
-      <button class="chip" id="sort-freq" aria-pressed="false">FAQ頻度順</button>
+      <button class="chip" id="sort-freq" aria-pressed="false">頻度順</button>
     </div>
   </div>
 
@@ -249,7 +241,7 @@
 
 <footer class="wrap" style="max-width:1180px">
   <span>第三層＝兆候 × 読み × 打ち手。左ナビ「使い方」＝MEDDPICC 補論。</span>
-  <span>v0.9.1 ／ マージ版FAQ + Usage</span>
+  <span id="meta-ver">MEDDPICC v1.0 ／ FAQ分離</span>
 </footer>
 
 <script>
@@ -371,30 +363,14 @@ function renderSpine(){
 
 function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-function faqOneHTML(f){
-  if(!f) return '';
-  const sections = (f.sections||[]).map(s=>`
-    <div class="faq-section">
-      <h4>${esc(s.title)}</h4>
-      <p>${esc(s.body)}</p>
-    </div>`).join('');
-  return `<div class="faq-block">
-    <div class="faq-id">${esc(f.id)} · ${esc(f.category)}</div>
-    <p class="faq-q">Q：${esc(f.question)}</p>
-    <div class="faq-conclusion"><strong>結論</strong>${esc(f.conclusion)}</div>
-    ${sections}
-    ${f.misconception?`<p class="faq-misconception">よくある誤解：${esc(f.misconception)}</p>`:''}
-    ${f.footnote?`<p class="faq-footnote">${esc(f.footnote)}</p>`:''}
-  </div>`;
-}
-
-function faqHTML(c){
-  if(!c.faq) return '';
-  const blocks = Array.isArray(c.faq) ? c.faq.map(faqOneHTML).join('') : faqOneHTML(c.faq);
-  const ids = c.faqIds?.length ? c.faqIds.join('・') : (Array.isArray(c.faq)?c.faq.map(f=>f.id).join('・'):c.faq.id);
-  return `<div class="field faq">
-    <div class="flabel">提案デッキ FAQ（${esc(ids)}）</div>
-    ${blocks}
+function faqLinkHTML(c){
+  if(!c.faqIds?.length) return '';
+  const links = c.faqIds.map(id=>
+    `<a class="pill faq-ref" href="./faq.html#${esc(id)}">${esc(id)}</a>`
+  ).join('');
+  return `<div class="field faq-xref">
+    <div class="flabel">関連 FAQ</div>
+    <div class="faq-link-row">${links}</div>
   </div>`;
 }
 
@@ -411,7 +387,7 @@ function cardHTML(c, rank){
           ? `<a class="src link" href="${s.url}" target="_blank" rel="noopener">${s.label} ↗</a>`
           : `<span class="src internal">${s.label}</span>`).join("")}</div>
       </div>` : "";
-  return `<article class="card">
+  return `<article class="card" id="${esc(c.scene)}">
     <div class="card-top">
       <div class="scene-row">
         <span class="tag-ltr">${letter}</span>
@@ -439,11 +415,11 @@ function cardHTML(c, rank){
         <div class="flabel">やらない</div>
         <p>${c.dont}</p>
       </div>
-      ${faqHTML(c)}
+      ${faqLinkHTML(c)}
       ${srcBlock}
     </div>
     <div class="meta">
-      ${c.faqIds?.length?`<span class="pill faq-ref">${c.faqIds.join(' ')}</span>`:''}
+      ${c.faqIds?.length?c.faqIds.map(id=>`<a class="pill faq-ref" href="./faq.html#${esc(id)}">${esc(id)}</a>`).join(''):''}
       ${rankBadge}
       <span class="pill freq">${c.freq}</span>
     </div>
@@ -468,11 +444,7 @@ function render(){
   let list = CARDS.filter(c=>{
     if(active!=="ALL" && c.shelf!==active) return false;
     if(query){
-      const faqList = c.faq ? (Array.isArray(c.faq) ? c.faq : [c.faq]) : [];
-      const faqHay = faqList.map(f=>
-        [f.question,f.conclusion,f.misconception,f.footnote,...(f.sections||[]).flatMap(s=>[s.title,s.body])].join(' ')
-      ).join(' ');
-      const hay = (c.scene+c.quote+c.read+c.doIt+c.dont+c.speaker+faqHay).toLowerCase();
+      const hay = (c.scene+c.quote+c.read+c.doIt+c.dont+c.speaker+(c.faqIds||[]).join(' ')).toLowerCase();
       if(!hay.includes(query)) return false;
     }
     return true;
@@ -482,7 +454,7 @@ function render(){
 
   const shelfNm = active==="ALL" ? "全棚" :
     (()=>{const s=SHELVES.find(x=>x.key===active);return `${s.k}・${s.nm}`;})();
-  const sortNm = sortMode === "freq" ? "FAQ頻度順" : "収録順";
+  const sortNm = sortMode === "freq" ? "頻度順" : "収録順";
   countEl.textContent = `${shelfNm} — ${list.length} 件 · ${sortNm}` + (query?` · 「${query}」`:"");
 
   if(list.length===0){
@@ -524,7 +496,11 @@ async function init(){
     CARDS = raw
       .map((c, i) => ({ ...c, _idx: i }))
       .filter((c) => !c.hidden && !excluded.has(c.scene));
+    const m = data.meta;
+    if (m) $('#meta-ver').textContent = `MEDDPICC v${m.version} ／ ${m.updated}`;
     render();
+    const hash = decodeURIComponent(location.hash.slice(1));
+    if (hash) requestAnimationFrame(()=> document.getElementById(hash)?.scrollIntoView({ behavior:'smooth', block:'start' }));
   } catch (err) {
     cardsEl.innerHTML = '<div class="empty-note"><b>cards.json の読み込みに失敗しました</b><br>' + err.message + '</div>';
   }

@@ -5,6 +5,11 @@
       "source": "/",
       "destination": "/index.html",
       "permanent": false
+    },
+    {
+      "source": "/faq",
+      "destination": "/faq.html",
+      "permanent": false
     }
   ],
   "headers": [
